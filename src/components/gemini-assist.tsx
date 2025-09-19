@@ -25,6 +25,7 @@ export function GeminiAssist() {
   const [devices, setDevices] = useState<{ audio: MediaDeviceInfo[], video: MediaDeviceInfo[] }>({ audio: [], video: [] });
   const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>('default');
   const [transcript, setTranscript] = useState('');
+  const [lastAnalyzedTranscript, setLastAnalyzedTranscript] = useState('');
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -191,7 +192,12 @@ export function GeminiAssist() {
   const analyzeScreenWithTranscript = useCallback(async () => {
     if (!videoRef.current || !screenStreamRef.current || !isCapturing) return;
 
+    const currentTranscript = transcript.trim();
+    if(currentTranscript === lastAnalyzedTranscript && currentTranscript !== '') return;
+    
     setStatus("analyzing");
+    setLastAnalyzedTranscript(currentTranscript);
+    
     const video = videoRef.current;
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
@@ -208,7 +214,7 @@ export function GeminiAssist() {
     try {
       const result = await provideContextualHelp({
         screenDataUri,
-        audioTranscription: transcript || 'User is not speaking.',
+        audioTranscription: currentTranscript || 'User is not speaking.',
       });
       setInstructions(result.instructions);
 
@@ -230,7 +236,7 @@ export function GeminiAssist() {
         setStatus("capturing");
       }
     }
-  }, [isCapturing, toast, transcript]);
+  }, [isCapturing, toast, transcript, lastAnalyzedTranscript]);
 
   useEffect(() => {
     if (isCapturing) {
