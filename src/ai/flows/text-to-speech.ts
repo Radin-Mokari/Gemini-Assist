@@ -11,7 +11,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import wav from 'wav';
 
-export const TextToSpeechOutputSchema = z.object({
+const TextToSpeechOutputSchema = z.object({
   media: z.string().describe('The audio data URI.'),
 });
 export type TextToSpeechOutput = z.infer<typeof TextToSpeechOutputSchema>;
