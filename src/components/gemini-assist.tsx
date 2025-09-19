@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -137,11 +138,17 @@ export function GeminiAssist() {
       }
     };
     recognition.onerror = (e:any) => {
+      if (e.error === 'no-speech') {
+        // This is a common occurrence, just ignore it and let recognition restart.
+        return;
+      }
+      
       console.error("Speech recognition error:", e.error);
+
       if (e.error === 'not-allowed') {
         toast({ variant: 'destructive', title: 'Audio permission denied', description: 'Please allow microphone access in your browser settings.'});
         handleStopCapture();
-      } else if (e.error !== 'no-speech') {
+      } else {
         setIsAudioCapturing(false);
       }
     };
