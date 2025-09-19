@@ -3,6 +3,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { provideContextualHelp } from "@/ai/flows/provide-contextual-help";
+import { textToSpeech } from "@/ai/flows/text-to-speech";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -24,13 +25,21 @@ export function GeminiAssist() {
   const [devices, setDevices] = useState<{ audio: MediaDeviceInfo[], video: MediaDeviceInfo[] }>({ audio: [], video: [] });
   const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>('default');
   const [transcript, setTranscript] = useState('');
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
   const analysisIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (audioUrl && audioRef.current) {
+      audioRef.current.play().catch(console.error);
+    }
+  }, [audioUrl]);
 
   const getDevices = useCallback(async () => {
     try {
@@ -202,6 +211,12 @@ export function GeminiAssist() {
         audioTranscription: transcript || 'User is not speaking.',
       });
       setInstructions(result.instructions);
+
+      if(result.instructions){
+        const audioResult = await textToSpeech(result.instructions);
+        setAudioUrl(audioResult.media);
+      }
+
     } catch (error) {
       console.error("AI analysis failed:", error);
       toast({
@@ -326,6 +341,7 @@ export function GeminiAssist() {
           </Card>
         </div>
       </div>
+       {audioUrl && <audio ref={audioRef} src={audioUrl} />}
     </div>
   );
 }

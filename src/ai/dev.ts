@@ -4,3 +4,4 @@ config();
 import '@/ai/flows/provide-contextual-help.ts';
 import '@/ai/flows/summarize-screen-content.ts';
 import '@/ai/flows/generate-initial-instructions.ts';
+import '@/ai/flows/text-to-speech.ts';
