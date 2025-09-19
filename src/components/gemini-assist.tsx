@@ -141,8 +141,9 @@ export function GeminiAssist() {
       if (e.error === 'not-allowed') {
         toast({ variant: 'destructive', title: 'Audio permission denied', description: 'Please allow microphone access in your browser settings.'});
         handleStopCapture();
+      } else if (e.error !== 'no-speech') {
+        setIsAudioCapturing(false);
       }
-      setIsAudioCapturing(false);
     };
 
     let final_transcript = '';
