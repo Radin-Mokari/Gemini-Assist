@@ -279,7 +279,7 @@ export function GeminiAssist() {
       <header className="flex items-center justify-between p-2 md:p-4 border-b">
         <div className="flex items-center gap-3">
           <Bot className="w-7 h-7 md:w-8 md:h-8 text-primary" />
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">AI-Powered Screen Assistant</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Your AI-Powered Screen Assistant</h1>
         </div>
         <SettingsSheet 
           devices={devices} 
