@@ -7,7 +7,7 @@ import { textToSpeech } from "@/ai/flows/text-to-speech";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Bot, Loader, Mic, MicOff, Play, StopCircle, Video, VideoOff } from "lucide-react";
+import { Bot, Loader, Mic, MicOff, Play, StopCircle, Video, VideoOff, Volume2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { SettingsSheet } from "@/components/settings-sheet";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,7 @@ export function GeminiAssist() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [isAudioCapturing, setIsAudioCapturing] = useState(false);
   const [instructions, setInstructions] = useState<string>("Hi there! I'm Gemini Assist. Share your screen and I'll help you out.");
-  const [status, setStatus] = useState<"idle" | "capturing" | "analyzing" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "capturing" | "analyzing" | "speaking" | "error">("idle");
   const [devices, setDevices] = useState<{ audio: MediaDeviceInfo[], video: MediaDeviceInfo[] }>({ audio: [], video: [] });
   const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>('default');
   const [transcript, setTranscript] = useState('');
@@ -41,6 +41,29 @@ export function GeminiAssist() {
       audioRef.current.play().catch(console.error);
     }
   }, [audioUrl]);
+
+  const handlePlayAudio = async () => {
+    if (!instructions) return;
+    setStatus("speaking");
+    try {
+      const audioResult = await textToSpeech(instructions);
+      setAudioUrl(audioResult.media);
+    } catch (error) {
+      console.error("Text-to-speech failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Audio Failed",
+        description: "Could not generate audio. You may have hit a rate limit.",
+      });
+    } finally {
+      if (isCapturing) {
+        setStatus("capturing");
+      } else {
+        setStatus("idle");
+      }
+    }
+  };
+
 
   const getDevices = useCallback(async () => {
     try {
@@ -149,7 +172,6 @@ export function GeminiAssist() {
     };
     recognition.onerror = (e:any) => {
       if (e.error === 'no-speech') {
-        // This is a common occurrence, just ignore it and let recognition restart.
         return;
       }
       
@@ -217,11 +239,7 @@ export function GeminiAssist() {
         audioTranscription: currentTranscript || 'User is not speaking.',
       });
       setInstructions(result.instructions);
-
-      if(result.instructions){
-        const audioResult = await textToSpeech(result.instructions);
-        setAudioUrl(audioResult.media);
-      }
+      setAudioUrl(null); // Reset audio URL so it doesn't auto-play
 
     } catch (error) {
       console.error("AI analysis failed:", error);
@@ -310,6 +328,7 @@ export function GeminiAssist() {
                         {status === 'analyzing' && <Loader className="mr-2 h-4 w-4 animate-spin" />}
                         {status === 'capturing' && 'Listening'}
                         {status === 'analyzing' && 'Analyzing'}
+                        {status === 'speaking' && 'Speaking'}
                         {status === 'idle' && 'Idle'}
                         {status === 'error' && 'Error'}
                     </Badge>
@@ -333,11 +352,21 @@ export function GeminiAssist() {
         
         <div className="w-full lg:w-2/5 flex flex-col p-4 lg:p-0 lg:pl-4">
           <Card className="flex-1 flex flex-col bg-card/50 shadow-lg">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-primary">
                 <Bot className="h-6 w-6" />
                 AI Instructions
               </CardTitle>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handlePlayAudio} 
+                disabled={!instructions || status === 'speaking'}
+                className="text-primary disabled:text-muted-foreground"
+              >
+                {status === 'speaking' ? <Loader className="h-5 w-5 animate-spin"/> : <Volume2 className="h-5 w-5" />}
+                <span className="sr-only">Play audio instructions</span>
+              </Button>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto">
               <div className="text-foreground/90 leading-relaxed space-y-4">
@@ -347,7 +376,7 @@ export function GeminiAssist() {
           </Card>
         </div>
       </div>
-       {audioUrl && <audio ref={audioRef} src={audioUrl} />}
+       {audioUrl && <audio ref={audioRef} src={audioUrl} onEnded={() => setStatus(isCapturing ? 'capturing' : 'idle')} />}
     </div>
   );
 }
