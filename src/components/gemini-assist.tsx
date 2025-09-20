@@ -7,7 +7,7 @@ import { textToSpeech } from "@/ai/flows/text-to-speech";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Bot, Loader, Mic, MicOff, Play, StopCircle, Video, VideoOff, Volume2 } from "lucide-react";
+import { Bot, Loader, Mic, MicOff, Play, StopCircle, Video, VideoOff } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { SettingsSheet } from "@/components/settings-sheet";
 import { Badge } from "@/components/ui/badge";
@@ -42,27 +42,25 @@ export function GeminiAssist() {
     }
   }, [audioUrl]);
 
-  const handlePlayAudio = async () => {
-    if (!instructions) return;
-    setStatus("speaking");
-    try {
-      const audioResult = await textToSpeech(instructions);
-      setAudioUrl(audioResult.media);
-    } catch (error) {
-      console.error("Text-to-speech failed:", error);
-      toast({
-        variant: "destructive",
-        title: "Audio Failed",
-        description: "Could not generate audio. You may have hit a rate limit.",
-      });
-    } finally {
-      if (isCapturing) {
-        setStatus("capturing");
-      } else {
+  useEffect(() => {
+    const playAudio = async () => {
+      if (!instructions || isCapturing) return; // Only autoplay on initial instruction
+      setStatus("speaking");
+      try {
+        const audioResult = await textToSpeech(instructions);
+        setAudioUrl(audioResult.media);
+      } catch (error) {
+        console.error("Text-to-speech failed:", error);
+        toast({
+          variant: "destructive",
+          title: "Audio Failed",
+          description: "Could not generate audio. You may have hit a rate limit.",
+        });
         setStatus("idle");
       }
-    }
-  };
+    };
+    playAudio();
+  }, [instructions, isCapturing, toast]);
 
 
   const getDevices = useCallback(async () => {
@@ -239,7 +237,10 @@ export function GeminiAssist() {
         audioTranscription: currentTranscript || 'User is not speaking.',
       });
       setInstructions(result.instructions);
-      setAudioUrl(null); // Reset audio URL so it doesn't auto-play
+
+      setStatus("speaking");
+      const audioResult = await textToSpeech(result.instructions);
+      setAudioUrl(audioResult.media);
 
     } catch (error) {
       console.error("AI analysis failed:", error);
@@ -352,21 +353,11 @@ export function GeminiAssist() {
         
         <div className="w-full lg:w-2/5 flex flex-col p-4 lg:p-0 lg:pl-4">
           <Card className="flex-1 flex flex-col bg-card/50 shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader>
               <CardTitle className="flex items-center gap-2 text-primary">
                 <Bot className="h-6 w-6" />
                 AI Instructions
               </CardTitle>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handlePlayAudio} 
-                disabled={!instructions || status === 'speaking'}
-                className="text-primary disabled:text-muted-foreground"
-              >
-                {status === 'speaking' ? <Loader className="h-5 w-5 animate-spin"/> : <Volume2 className="h-5 w-5" />}
-                <span className="sr-only">Play audio instructions</span>
-              </Button>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto">
               <div className="text-foreground/90 leading-relaxed space-y-4">
