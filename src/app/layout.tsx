@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Gemini Assist',
+  title: 'AI-Powered Screen Assistant',
   description: 'Your AI-powered screen sharing assistant',
 };
 

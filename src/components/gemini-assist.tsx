@@ -20,7 +20,7 @@ interface CustomWindow extends Window {
 export function GeminiAssist() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [isAudioCapturing, setIsAudioCapturing] = useState(false);
-  const [instructions, setInstructions] = useState<string>("Hi there! I'm Gemini Assist. Share your screen and I'll help you out.");
+  const [instructions, setInstructions] = useState<string>("Hi there! I'm your AI-Powered Screen Assistant. Share your screen and I'll help you out.");
   const [status, setStatus] = useState<"idle" | "capturing" | "analyzing" | "speaking" | "error">("idle");
   const [devices, setDevices] = useState<{ audio: MediaDeviceInfo[], video: MediaDeviceInfo[] }>({ audio: [], video: [] });
   const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>('default');
@@ -141,7 +141,7 @@ export function GeminiAssist() {
         });
         setIsCapturing(false);
         setStatus("idle");
-        setInstructions("Hi there! I'm Gemini Assist. Share your screen and I'll help you out.");
+        setInstructions("Hi there! I'm your AI-Powered Screen Assistant. Share your screen and I'll help you out.");
     }
   }
 
@@ -279,7 +279,7 @@ export function GeminiAssist() {
       <header className="flex items-center justify-between p-2 md:p-4 border-b">
         <div className="flex items-center gap-3">
           <Bot className="w-7 h-7 md:w-8 md:h-8 text-primary" />
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">Gemini Assist</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">AI-Powered Screen Assistant</h1>
         </div>
         <SettingsSheet 
           devices={devices} 
